@@ -36,4 +36,6 @@ export interface EventLog {
   time: string;
   actor: string;
   message: string;
+  /** 对应发送账流水 id，用于镜像同步去重 */
+  ledgerEventId?: string;
 }
