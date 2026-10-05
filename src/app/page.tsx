@@ -9,7 +9,9 @@ import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { useState } from 'react';
 import { useCommandStore } from '@/lib/store';
+import { POSITION_TTL_MS } from '@/lib/ledger';
 import { SearchMap } from '@/components/SearchMap';
+import { CommunicationWindow } from '@/components/CommunicationWindow';
 
 const missionSchema = z.object({
   title: z.string().min(3, '任务名称至少3个字'),
@@ -50,14 +52,16 @@ export default function CommandPage() {
             ['活动搜索区', state.areas.filter((item) => item.status === 'active').length],
             ['在线单位', state.assets.filter((item) => item.status !== 'offline').length],
             ['进行中任务', state.missions.filter((item) => item.status === 'in_progress').length],
-            ['过期位置', state.assets.filter((item) => Date.now() - new Date(item.lastSeen).getTime() > 10 * 60_000).length]
+            ['过期位置', state.assets.filter((item) => Date.now() - new Date(item.lastSeen).getTime() > POSITION_TTL_MS).length]
           ].map(([label, value]) => <Card key={String(label)} withBorder><Text size="sm" c="dimmed">{label}</Text><Title order={2}>{value}</Title></Card>)}
         </SimpleGrid>
+
+        <CommunicationWindow />
 
         <Grid gutter="lg">
           <Grid.Col span={{ base: 12, lg: 8 }}><Card withBorder><Group justify="space-between"><Title order={3}>搜救态势</Title><Text size="sm">风况：{brief.data?.wind ?? '读取中'} · 能见度：{brief.data?.visibility ?? '--'}</Text></Group><SearchMap areas={state.areas} assets={state.assets} /></Card></Grid.Col>
           <Grid.Col span={{ base: 12, lg: 4 }}><Card withBorder h="100%"><Title order={3}>单位状态</Title><Stack mt="md">{state.assets.map((asset) => {
-            const stale = Date.now() - new Date(asset.lastSeen).getTime() > 10 * 60_000;
+            const stale = Date.now() - new Date(asset.lastSeen).getTime() > POSITION_TTL_MS;
             return <Card key={asset.id} withBorder padding="sm"><Group justify="space-between"><b>{asset.name}</b><Badge color={asset.status === 'offline' ? 'red' : asset.status === 'assigned' ? 'blue' : 'teal'}>{asset.status}</Badge></Group><Text size="xs" c={stale ? 'red' : 'dimmed'}>{stale ? '位置已过期 · ' : ''}{formatDistanceToNow(new Date(asset.lastSeen), { addSuffix: true, locale: zhCN })}</Text><Group mt="xs"><Button size="compact-xs" onClick={() => state.setAssetStatus(asset.id, asset.status === 'offline' ? 'ready' : 'offline')}>{asset.status === 'offline' ? '恢复在线' : '标记失联'}</Button></Group></Card>;
           })}</Stack></Card></Grid.Col>
         </Grid>

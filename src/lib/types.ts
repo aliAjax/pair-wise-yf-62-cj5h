@@ -37,3 +37,26 @@ export interface EventLog {
   actor: string;
   message: string;
 }
+
+// 通信窗口 · 发送账
+export type PacketKind = 'position' | 'command' | 'receipt';
+export type PacketStatus = 'queued' | 'inflight' | 'delivered' | 'voided' | 'expired';
+export type PacketPriority = 'urgent' | 'normal' | 'routine';
+
+export interface SendPacket {
+  id: string;
+  kind: PacketKind;
+  priority: PacketPriority;
+  status: PacketStatus;
+  dedupeKey: string;
+  title: string;
+  assetId?: string;
+  missionId?: string;
+  enqueuedAt: string;
+  sentAt?: string;
+  deliveredAt?: string;
+  attempts: number;
+  lastError?: string;
+  expiresAt?: string;
+  receiptOf?: string;
+}
